@@ -2,6 +2,7 @@ package br.org.generation.blogpessoal.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -50,7 +51,7 @@ public class BasicSecurityConfig extends WebSecurityConfigurerAdapter {
 	private UserDetailsService userDetailsService;
 
 	/**
-	 *  Sobrecarrega (@Override) o primeiro método Configure, que tem a função 
+	 *  Sobrescreve (@Override) o primeiro método Configure, que tem a função 
 	 *  de criar uma nova instância da Classe AuthenticationManagerBuilder e 
 	 *  define que o login será efetuado através dos usuários criados no Banco de dados.
 	 *  Para recuperar os dados do usuário no Banco de Dados utilizaremos a Interface 
@@ -80,6 +81,11 @@ public class BasicSecurityConfig extends WebSecurityConfigurerAdapter {
 		
 		 auth.userDetailsService(userDetailsService);
 
+		 auth.inMemoryAuthentication()
+			.withUser("root")
+			.password(passwordEncoder().encode("root"))
+			.authorities("ROLE_USER");
+
 	}
 
 	/**
@@ -98,7 +104,7 @@ public class BasicSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	/**
-	 *  Sobrecarrega (@Override) o segundo método Configure que é responsável por
+	 *  Sobrescreve (@Override) o segundo método Configure que é responsável por
 	 *  criar uma instância da Classe HttpSecurity, que permite configurar a 
 	 *  segurança baseada na web para solicitações http específicas (endpoints)
 	 */
@@ -108,6 +114,12 @@ public class BasicSecurityConfig extends WebSecurityConfigurerAdapter {
 		
 		/**
 		 * antMatchers().permitAll -> Endpoint liberado de autenticação
+		 * 
+		 * HttpMethod.OPTIONS -> O parâmetro HttpMethod.OPTIONS permite que 
+		 * o cliente (frontend), possa descobrir quais são as opções de 
+		 * requisição permitidas para um determinado recurso em um servidor. 
+		 * Nesta implementação, está sendo liberada todas as opções das 
+		 * requisições através do método permitAll().
 		 * 
 		 * anyRequest().authenticated() -> Todos os demais endpoints 
 		 * serão autenticados
@@ -149,6 +161,7 @@ public class BasicSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.authorizeRequests()
 			.antMatchers("/usuarios/logar").permitAll()
 			.antMatchers("/usuarios/cadastrar").permitAll()
+			.antMatchers(HttpMethod.OPTIONS).permitAll()
 			.anyRequest().authenticated()
 			.and().httpBasic()
 			.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
